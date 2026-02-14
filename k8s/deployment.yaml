@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eightton-claude-code
+  namespace: aiops-app
+  labels:
+    app: eightton-claude-code
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eightton-claude-code
+  template:
+    metadata:
+      labels:
+        app: eightton-claude-code
+    spec:
+      containers:
+      - name: eightton-claude-code
+        image: v2-zcr.cloudzcp.io/cloudzcp/eightton-claude-code:0.3.3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: eightton-claude-code-secret
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      imagePullSecrets:
+      - name: v2-zcr-cloudzcp-io-robot-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eightton-claude-code
+  namespace: aiops-app
+spec:
+  selector:
+    app: eightton-claude-code
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
