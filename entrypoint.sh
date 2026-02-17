@@ -28,6 +28,12 @@ if [ -n "$GIT_REPO_URL" ]; then
     cd "$REPO_DIR"
     git pull
   fi
+
+  # uv: 프로젝트 의존성 동기화
+  if [ -f "pyproject.toml" ]; then
+    echo "Running uv sync..."
+    uv sync --dev 2>&1 || echo "Warning: uv sync failed (will retry on first use)"
+  fi
 fi
 
 echo "Exposing claude mcp serve over Streamable HTTP on port 8080 (with outputSchema proxy)"

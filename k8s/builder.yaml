@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: eightton-builder
+  namespace: aiops-app
+  labels:
+    app: eightton-builder
+spec:
+  containers:
+  - name: builder
+    image: gcr.io/kaniko-project/executor:debug
+    command: ["sleep", "infinity"]
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+      readOnly: true
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: v2-zcr-cloudzcp-io-robot-secret
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+  restartPolicy: Never

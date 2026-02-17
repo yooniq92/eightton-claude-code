@@ -41,7 +41,7 @@ function summarizeToolCall(params) {
   }
 }
 
-function summarizeToolResult(result) {
+function formatToolResult(result) {
   const content = result?.content;
   if (!Array.isArray(content)) return "no content";
 
@@ -50,17 +50,17 @@ function summarizeToolResult(result) {
     .map((c) => c.text)
     .join("");
 
-  if (text.length <= 200) return text;
-  return text.slice(0, 200) + `... (${text.length} chars)`;
+  return text;
 }
 
-const child = spawn("claude", ["mcp", "serve"], {
+const child = spawn("claude", ["mcp", "serve", "--verbose"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
-// Forward child stderr to our stderr (claude code's own logs)
-child.stderr.on("data", (data) => {
-  process.stderr.write(data);
+// Forward child stderr with prefix for clarity
+const errRl = createInterface({ input: child.stderr, crlfDelay: Infinity });
+errRl.on("line", (line) => {
+  log(`[claude] ${line}`);
 });
 
 log("Proxy started, spawned 'claude mcp serve'");
@@ -105,9 +105,12 @@ outRl.on("line", (line) => {
     }
     // Log tool call results
     else if (msg.result?.content) {
-      const summary = summarizeToolResult(msg.result);
+      const text = formatToolResult(msg.result);
       const isError = msg.result.isError;
-      log(`← RESULT [id=${msg.id}]${isError ? " ERROR" : ""} ${summary}`);
+      log(`← RESULT [id=${msg.id}]${isError ? " ERROR" : ""}`);
+      if (text) {
+        text.split("\n").forEach((line) => log(`  ${line}`));
+      }
     }
     // Log errors
     else if (msg.error) {

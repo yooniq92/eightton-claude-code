@@ -17,10 +17,13 @@ spec:
     spec:
       containers:
       - name: eightton-claude-code
-        image: v2-zcr.cloudzcp.io/cloudzcp/eightton-claude-code:0.3.3
+        image: v2-zcr.cloudzcp.io/cloudzcp/eightton-claude-code:0.5.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+        env:
+        - name: CLAUDE_MODEL
+          value: "claude-opus-4-6"
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret
