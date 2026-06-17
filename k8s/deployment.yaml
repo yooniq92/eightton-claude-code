@@ -24,6 +24,13 @@ spec:
         env:
         - name: CLAUDE_MODEL
           value: "claude-opus-4-6"
+        # entrypoint.sh가 읽는 Git 동작 환경변수 (기존에는 미설정으로 기본값에 의존)
+        - name: GIT_DEFAULT_BRANCH
+          value: "main"
+        - name: GIT_USER_NAME
+          value: "eightton-code-runner"
+        - name: GIT_USER_EMAIL
+          value: "eightton-code-runner@users.noreply.github.com"
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret
@@ -32,8 +39,8 @@ spec:
             cpu: "1000m"
             memory: "2Gi"
           limits:
-            cpu: "2000m"
-            memory: "4Gi"
+            cpu: "4000m"
+            memory: "6Gi"
         livenessProbe:
           httpGet:
             path: /health
