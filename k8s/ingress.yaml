@@ -4,15 +4,20 @@ metadata:
   name: eightton-claude-code-ingress
   namespace: aiops-app
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+    # 대용량 MCP 페이로드(파일 편집/패치 등)를 허용하도록 body-size 상향
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Streamable HTTP(SSE) 응답 버퍼링 해제 — 스트리밍 응답 즉시 전달
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    # CORS: 모든 origin/method/header 허용 (full access)
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
-    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range"
-    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,X-API-Key,Mcp-Session-Id"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range,Mcp-Session-Id"
+    # origin "*"와 credentials는 브라우저 스펙상 양립 불가하므로 false로 설정해 와일드카드 허용을 유지
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
 spec:
   ingressClassName: public-nginx
   rules:
