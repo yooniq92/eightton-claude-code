@@ -53,9 +53,16 @@ function formatToolResult(result) {
   return text;
 }
 
-const child = spawn("claude", ["mcp", "serve", "--verbose"], {
-  stdio: ["pipe", "pipe", "pipe"],
-});
+// Full-permission mode: claude mcp serve runs with all tools enabled and no
+// interactive permission prompts (the container is a trusted dev agent).
+// `--dangerously-skip-permissions` grants every MCP tool full access.
+const child = spawn(
+  "claude",
+  ["mcp", "serve", "--verbose", "--dangerously-skip-permissions"],
+  {
+    stdio: ["pipe", "pipe", "pipe"],
+  },
+);
 
 // Forward child stderr with prefix for clarity
 const errRl = createInterface({ input: child.stderr, crlfDelay: Infinity });
