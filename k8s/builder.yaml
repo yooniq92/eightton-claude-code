@@ -1,3 +1,14 @@
+# ---------------------------------------------------------------------------
+# Builder Pod (Kaniko) — MCP 이미지 빌드 권한
+#
+# 이 Pod는 eightton-claude-code(MCP 백엔드) 컨테이너 이미지를 빌드/푸시한다.
+# 빌드된 이미지가 deployment.yaml에서 3개 MCP 서버 역할을 모두 수행하므로,
+# 레지스트리 푸시 권한(robot secret)이 올바르게 마운트되어야 한다.
+#
+# 권한 관련 주의:
+# - docker-config는 readOnly로 마운트한다(자격증명 변조 방지).
+# - robot secret 권한이 부족하면 push 실패 → MCP 백엔드 배포가 막힌다.
+# ---------------------------------------------------------------------------
 apiVersion: v1
 kind: Pod
 metadata:
@@ -11,6 +22,7 @@ spec:
     image: gcr.io/kaniko-project/executor:debug
     command: ["sleep", "infinity"]
     volumeMounts:
+    # 레지스트리 push 자격증명 — read-only로 마운트하여 권한 토큰 변조를 방지
     - name: docker-config
       mountPath: /kaniko/.docker
       readOnly: true
@@ -22,6 +34,7 @@ spec:
         cpu: "2000m"
         memory: "4Gi"
   volumes:
+  # robot secret = 레지스트리 push 권한. MCP 백엔드 이미지를 푸시하는 데 필요.
   - name: docker-config
     secret:
       secretName: v2-zcr-cloudzcp-io-robot-secret

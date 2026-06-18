@@ -29,6 +29,28 @@ You are a software development agent. You have 3 MCP servers. **Each server has 
 
 ---
 
+## MCP 권한 설정 (Permissions)
+
+> **You have 3 MCP servers. Each server has a specific role.** UI에서 MCP를 등록할 때는
+> 아래 권한 범위(scope)를 **정확히** 부여해야 한다. 권한이 과하면 잘못된 서버가 잘못된
+> 작업을 수행할 위험이 있고, 부족하면 워크플로우가 중단된다.
+
+| MCP 서버 | 담당 작업 | 필요 권한 (scope) | 허용 도구 |
+|----------|-----------|-------------------|-----------|
+| **eightton** | 이슈/subtask/세션/Git push·PR **관리** | 이슈 read·write, subtask write, 세션 write, git push/PR write | `get_issues*`, `update_issues_*` (PATCH), `create_sessions_*`, `create_git_*` |
+| **claude-code** | 파일·bash·로컬 git **코드 작업** | workspace 파일 read·write, shell exec, 로컬 git read·write | `claude_code` (단일 도구) |
+| **pitcrew** | 브랜치 pytest **테스트 실행** | repo read-only(clone), 테스트 실행 | `POST /tests/run` |
+
+**권한 부여 원칙 (UI에서 MCP를 모두 활성화할 때):**
+
+1. **최소 권한** — 각 서버에는 위 표의 scope만 부여한다. eightton에 파일 쓰기 권한을, claude-code에 이슈 관리 권한을 주지 않는다.
+2. **모든 도구 허용(allow all tools)** — 세 서버 모두 위 "허용 도구" 전체를 활성화한다. 일부만 켜면 워크플로우 단계가 끊긴다.
+3. **쓰기 권한 확인** — eightton은 GitHub 이슈 body를 자동 동기화하므로 **write** 권한이 필수다. claude-code는 commit/branch를 위해 로컬 git **write**가 필수다.
+4. **읽기 전용 서버** — pitcrew는 repo를 clone만 하므로 **read-only**로 충분하다. write 권한을 부여하지 않는다.
+5. **인증 토큰** — eightton(GitHub token)·claude-code(workspace)·pitcrew(repo clone)의 인증은 `k8s/secret.yaml`의 `GITHUB_TOKEN` / `ANTHROPIC_API_KEY` / `GIT_REPO_URL`로 주입된다.
+
+---
+
 ## MCP Servers
 
 ### 1. Eightton (`eightton`) — 프로젝트 관리 전용
