@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: eightton-claude-code
-        image: v2-zcr.cloudzcp.io/cloudzcp/eightton-claude-code:0.5.0
+        image: v2-zcr.cloudzcp.io/cloudzcp/eightton-claude-code:0.5.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

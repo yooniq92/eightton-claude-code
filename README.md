@@ -11,6 +11,22 @@ This service wraps Claude Code CLI as a containerized HTTP endpoint using superg
 - `proxy.mjs` - MCP proxy that strips outputSchema from tool definitions
 - `entrypoint.sh` - Container initialization script
 - `agent-prompt.md` - Development workflow instructions
+- `settings.json` - Claude Code settings; grants the MCP server all permissions
+
+## Permissions
+
+The MCP server (`claude mcp serve`) is granted **all permissions** so its tools
+(Bash, Write, Edit, …) run without interactive approval prompts — the MCP host
+has no way to answer them.
+
+This is configured via `settings.json`, shipped to `$CLAUDE_CONFIG_DIR`
+(`/root/.claude/settings.json`) by the Dockerfile:
+
+- `permissions.defaultMode: "bypassPermissions"` — bypass all permission checks.
+- `IS_SANDBOX=1` (env) — allows bypass mode while running as root in the pod.
+
+> ⚠️ Run only in a trusted, isolated sandbox: the server can execute arbitrary
+> commands and edit any file without prompting.
 
 ## Build & Deploy
 
