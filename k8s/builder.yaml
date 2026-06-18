@@ -14,10 +14,14 @@ spec:
     - name: docker-config
       mountPath: /kaniko/.docker
       readOnly: true
+    # One-shot kaniko build pod (restartPolicy: Never). It idles on `sleep
+    # infinity` between exec-driven builds, so requests are kept low to avoid
+    # reserving cluster capacity while idle; limits stay generous for the
+    # layer-extraction burst during an actual build.
     resources:
       requests:
-        cpu: "1000m"
-        memory: "2Gi"
+        cpu: "250m"
+        memory: "512Mi"
       limits:
         cpu: "4000m"
         memory: "8Gi"
