@@ -53,9 +53,19 @@ function formatToolResult(result) {
   return text;
 }
 
-const child = spawn("claude", ["mcp", "serve", "--verbose"], {
-  stdio: ["pipe", "pipe", "pipe"],
-});
+// Full-permission mode: this container is a trusted, unattended dev agent, so
+// `claude mcp serve` runs with every tool enabled and no interactive permission
+// prompts. `--dangerously-skip-permissions` is what actually grants each MCP
+// tool full access; the deployment also sets CLAUDE_CODE_ACCEPT_PERMISSIONS=true
+// to reinforce it. Without this flag the server would stall waiting for an
+// approval that no human is present to give.
+const child = spawn(
+  "claude",
+  ["mcp", "serve", "--verbose", "--dangerously-skip-permissions"],
+  {
+    stdio: ["pipe", "pipe", "pipe"],
+  },
+);
 
 // Forward child stderr with prefix for clarity
 const errRl = createInterface({ input: child.stderr, crlfDelay: Infinity });

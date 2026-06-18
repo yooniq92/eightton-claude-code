@@ -24,6 +24,13 @@ spec:
         env:
         - name: CLAUDE_MODEL
           value: "claude-opus-4-6"
+        # Full-permission mode: skip interactive tool-permission prompts so every
+        # MCP tool runs unattended inside this trusted dev-agent container. This
+        # reinforces the `--dangerously-skip-permissions` flag passed to
+        # `claude mcp serve` in proxy.mjs — together they grant all MCP servers
+        # (eightton / claude-code / pitcrew) full, unattended access.
+        - name: CLAUDE_CODE_ACCEPT_PERMISSIONS
+          value: "true"
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret
