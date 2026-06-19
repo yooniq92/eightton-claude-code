@@ -23,4 +23,4 @@ make all      # Build + deploy + restart
 
 ## License — MIT
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](./LICENSE).
