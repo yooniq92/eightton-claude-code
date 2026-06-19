@@ -4,3 +4,10 @@ node_modules/
 .env.*.local
 *.log
 .DS_Store
+
+# Secrets — 실제 시크릿 파일/값이 커밋되지 않도록 차단
+*.secret.yaml
+*-secret.local.yaml
+secrets.*
+*.pem
+*.key
