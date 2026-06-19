@@ -24,6 +24,17 @@ spec:
         env:
         - name: CLAUDE_MODEL
           value: "claude-opus-4-6"
+        # === MCP all-permissions (issue #5) ===
+        # `claude mcp serve` cannot answer interactive permission prompts, so the
+        # MCP server runs in bypassPermissions mode (see settings.json). These are
+        # baked into the image via the Dockerfile but are declared here too so the
+        # requirement is explicit at the k8s layer and survives image overrides.
+        - name: CLAUDE_CONFIG_DIR
+          value: "/root/.claude"
+        # bypassPermissions refuses to run as root unless sandbox mode is set; the
+        # pod runs as root, so mark it as a trusted, isolated sandbox.
+        - name: IS_SANDBOX
+          value: "1"
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret

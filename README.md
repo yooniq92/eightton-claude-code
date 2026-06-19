@@ -25,6 +25,11 @@ This is configured via `settings.json`, shipped to `$CLAUDE_CONFIG_DIR`
 - `permissions.defaultMode: "bypassPermissions"` — bypass all permission checks.
 - `IS_SANDBOX=1` (env) — allows bypass mode while running as root in the pod.
 
+`k8s/deployment.yaml` also declares `CLAUDE_CONFIG_DIR` and `IS_SANDBOX`
+explicitly, so the requirement is visible at the deployment layer and survives
+image overrides. The same behaviour is documented for agents in
+`agent-prompt.md` (Claude Code server → Permissions).
+
 > ⚠️ Run only in a trusted, isolated sandbox: the server can execute arbitrary
 > commands and edit any file without prompting.
 
