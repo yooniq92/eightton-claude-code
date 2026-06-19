@@ -20,3 +20,7 @@ make deploy   # Apply k8s manifests
 make restart  # Rolling restart
 make all      # Build + deploy + restart
 ```
+
+## License — MIT
+
+This project is licensed under the MIT License.
