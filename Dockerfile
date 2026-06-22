@@ -2,11 +2,30 @@ FROM node:20-slim
 
 RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
-# Claude Code CLI (install BEFORE python3 to avoid Kaniko GLIBC conflicts)
-RUN npm install -g @anthropic-ai/claude-code
+# Pinned versions for reproducible builds. An UNPINNED `npm install -g` was the
+# root cause of the runtime "Cannot find module 'commander'" crash: it resolved
+# to a claude-code build whose transitive deps (commander, ...) were installed
+# incompletely in this slim/Kaniko image, and nothing verified the CLI before
+# shipping. Pinning to a fully-bundled release + the build-time smoke test below
+# guarantees the CLI's module tree resolves. Bump with --build-arg to upgrade.
+ARG CLAUDE_CODE_VERSION=2.1.185
+ARG SUPERGATEWAY_VERSION=3.4.3
+
+# Claude Code CLI (install BEFORE python3 to avoid Kaniko GLIBC conflicts).
+# --no-fund/--no-audit keep the slim-image install deterministic.
+RUN npm install -g --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 
 # stdio -> HTTP bridge
-RUN npm install -g supergateway
+RUN npm install -g --no-fund --no-audit "supergateway@${SUPERGATEWAY_VERSION}"
+
+# Build-time smoke test: fail the build LOUDLY here if either CLI cannot load
+# its module tree (this is exactly what "Cannot find module 'commander'" looked
+# like at runtime). A broken image must never reach the registry.
+RUN echo "Verifying CLIs load..." \
+    && claude --version \
+    && command -v supergateway >/dev/null \
+    && node -e "require('child_process')" \
+    && echo "CLI verification OK"
 
 # Python 3 (installed after npm packages; apt python3 deps may break
 # node in Kaniko builder, but node/npm are already installed above)

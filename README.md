@@ -30,6 +30,25 @@ This container is a trusted, unattended dev agent, so every MCP tool runs with *
 - `Dockerfile` / `k8s/deployment.yaml` set `CLAUDE_CODE_ACCEPT_PERMISSIONS=true` to reinforce it.
 - `k8s/ingress.yaml` opens CORS for all MCP transport methods/headers (`PATCH`, `Mcp-Session-Id`, …).
 
+## Reproducible builds (fixes "Cannot find module 'commander'")
+
+The `Dockerfile` **pins** the global npm packages and **verifies** them at build time:
+
+- `@anthropic-ai/claude-code` and `supergateway` are installed at fixed versions
+  (`ARG CLAUDE_CODE_VERSION` / `ARG SUPERGATEWAY_VERSION`). An unpinned
+  `npm install -g` previously resolved to a build whose transitive deps (e.g.
+  `commander`) were installed incompletely in the slim/Kaniko image, causing a
+  runtime `Cannot find module 'commander'` crash.
+- A build-time smoke test (`claude --version` + `supergateway` presence) makes the
+  build **fail loudly** if a CLI's module tree cannot load — a broken image never
+  reaches the registry.
+- `entrypoint.sh` runs the **pre-installed** `supergateway` binary directly instead
+  of `npx -y supergateway`, which would re-resolve/re-download at runtime (fragile
+  and offline-unsafe). It falls back to `npx` only if the global binary is missing.
+
+To upgrade either CLI: `make build` with an updated `ARG`, or
+`docker build --build-arg CLAUDE_CODE_VERSION=<x> --build-arg SUPERGATEWAY_VERSION=<y> .`
+
 ## Build & Deploy
 
 ```bash
