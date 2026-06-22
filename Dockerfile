@@ -32,12 +32,14 @@ ENV CLAUDE_CONFIG_DIR=/root/.claude
 RUN mkdir -p /root/.claude
 COPY settings.json /root/.claude/settings.json
 
-# `--dangerously-skip-permissions` / bypassPermissions refuse to run as root for
-# safety; this container legitimately runs as root, so mark it as a sandbox to
-# allow the flag (set in proxy.mjs) to take effect instead of aborting startup.
+# `bypassPermissions` mode refuses to run as root for safety; this container
+# legitimately runs as root, so mark it as a sandbox to let bypassPermissions
+# (from settings.json) take effect instead of being downgraded.
 ENV IS_SANDBOX=1
 
 # Reinforce full-permission mode (also set in k8s/deployment.yaml).
+# NOTE: `claude mcp serve` does NOT accept --dangerously-skip-permissions, so
+# permissions are granted via settings.json (bypassPermissions) + these envs.
 ENV CLAUDE_CODE_ACCEPT_PERMISSIONS=true
 ENV NODE_ENV=production
 

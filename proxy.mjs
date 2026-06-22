@@ -55,13 +55,16 @@ function formatToolResult(result) {
 
 // Full-permission mode: this container is a trusted, unattended dev agent, so
 // `claude mcp serve` runs with every tool enabled and no interactive permission
-// prompts. `--dangerously-skip-permissions` is what actually grants each MCP
-// tool full access; the deployment also sets CLAUDE_CODE_ACCEPT_PERMISSIONS=true
-// to reinforce it. Without this flag the server would stall waiting for an
-// approval that no human is present to give.
+// prompts. Permissions are granted via the shipped settings.json
+// (permissions.defaultMode="bypassPermissions", allow:["*"]) read from
+// $CLAUDE_CONFIG_DIR — that is the canonical, working mechanism. NOTE: the
+// `mcp serve` subcommand does NOT accept `--dangerously-skip-permissions`
+// (it only supports --debug/--verbose); passing it makes the CLI abort with
+// "unknown option" and the server never starts. So we pass only --verbose here
+// and rely on settings.json + IS_SANDBOX + CLAUDE_CODE_ACCEPT_PERMISSIONS.
 const child = spawn(
   "claude",
-  ["mcp", "serve", "--verbose", "--dangerously-skip-permissions"],
+  ["mcp", "serve", "--verbose"],
   {
     stdio: ["pipe", "pipe", "pipe"],
   },

@@ -26,9 +26,11 @@ spec:
           value: "claude-opus-4-6"
         # Full-permission mode: skip interactive tool-permission prompts so every
         # MCP tool runs unattended inside this trusted dev-agent container. This
-        # reinforces the `--dangerously-skip-permissions` flag passed to
-        # `claude mcp serve` in proxy.mjs — together they grant all MCP servers
-        # (eightton / claude-code / pitcrew) full, unattended access.
+        # reinforces the settings.json `bypassPermissions` mode (shipped in the
+        # image at $CLAUDE_CONFIG_DIR) that `claude mcp serve` reads — together
+        # they grant all MCP servers (eightton / claude-code / pitcrew) full,
+        # unattended access. (`mcp serve` does not accept the
+        # --dangerously-skip-permissions flag, so settings.json is the mechanism.)
         - name: CLAUDE_CODE_ACCEPT_PERMISSIONS
           value: "true"
         envFrom:

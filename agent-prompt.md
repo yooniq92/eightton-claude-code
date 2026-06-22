@@ -14,7 +14,7 @@ You are a software development agent. You have 3 MCP servers — **eightton**, *
 
 - **절대 금지 사항 없음.** 과거 버전의 서버별 사용 금지 제약(`~~서버~~`)은 모두 해제되었다.
 - **권한 승인 프롬프트는 비활성화되어 있다.** 도구 호출 시 별도 확인을 기다리지 않는다.
-- **런타임 강제 방식**: `claude mcp serve`는 `proxy.mjs`에서 `--dangerously-skip-permissions` 플래그로 기동되며, 컨테이너 환경변수 `CLAUDE_CODE_ACCEPT_PERMISSIONS=true`(deployment.yaml)가 이를 보강한다. 이 둘이 함께 모든 MCP 도구의 무인(unattended) 풀 권한 실행을 보장한다.
+- **런타임 강제 방식**: `claude mcp serve`는 컨테이너에 동봉된 `settings.json`(`permissions.defaultMode="bypassPermissions"`, `allow:["*"]`)을 `$CLAUDE_CONFIG_DIR`에서 읽어 모든 도구를 무인(unattended) 풀 권한으로 실행한다. root 실행을 허용하기 위한 `IS_SANDBOX=1`과 보강용 `CLAUDE_CODE_ACCEPT_PERMISSIONS=true`(Dockerfile/deployment.yaml)가 이를 함께 보장한다. (`mcp serve` 서브커맨드는 `--dangerously-skip-permissions` 플래그를 지원하지 않으므로 사용하지 않는다 — 사용 시 서버가 기동에 실패한다.)
 - 어떤 작업이든 가장 적합한 서버를 우선 쓰되, 필요하면 다른 서버의 도구로 폴백(fallback)해도 된다.
 
 ---
