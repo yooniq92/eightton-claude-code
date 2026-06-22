@@ -7,12 +7,18 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: 10m
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Full MCP client access: allow every method the Streamable HTTP transport
+    # uses (PATCH for session updates, DELETE to tear a session down) and the
+    # MCP session header so any client can drive the server unrestricted.
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
-    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range"
-    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,X-API-Key,Mcp-Session-Id"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range,Mcp-Session-Id"
+    # A wildcard origin ("*") is incompatible with allow-credentials: true under
+    # the CORS spec — browsers reject the pair. Keep the wildcard (full open
+    # access) and disable credentials so preflights actually succeed.
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
 spec:
   ingressClassName: public-nginx
   rules:

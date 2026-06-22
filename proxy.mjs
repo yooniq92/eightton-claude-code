@@ -53,9 +53,22 @@ function formatToolResult(result) {
   return text;
 }
 
-const child = spawn("claude", ["mcp", "serve", "--verbose"], {
-  stdio: ["pipe", "pipe", "pipe"],
-});
+// Full-permission mode: this container is a trusted, unattended dev agent, so
+// `claude mcp serve` runs with every tool enabled and no interactive permission
+// prompts. Permissions are granted via the shipped settings.json
+// (permissions.defaultMode="bypassPermissions", allow:["*"]) read from
+// $CLAUDE_CONFIG_DIR — that is the canonical, working mechanism. NOTE: the
+// `mcp serve` subcommand does NOT accept `--dangerously-skip-permissions`
+// (it only supports --debug/--verbose); passing it makes the CLI abort with
+// "unknown option" and the server never starts. So we pass only --verbose here
+// and rely on settings.json + IS_SANDBOX + CLAUDE_CODE_ACCEPT_PERMISSIONS.
+const child = spawn(
+  "claude",
+  ["mcp", "serve", "--verbose"],
+  {
+    stdio: ["pipe", "pipe", "pipe"],
+  },
+);
 
 // Forward child stderr with prefix for clarity
 const errRl = createInterface({ input: child.stderr, crlfDelay: Infinity });

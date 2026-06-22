@@ -38,7 +38,18 @@ fi
 
 echo "Exposing claude mcp serve over Streamable HTTP on port 8080 (with outputSchema proxy)"
 
-exec npx -y supergateway \
+# Use the supergateway installed (and verified) at build time. `npx -y` would
+# re-resolve/re-download at runtime — fragile in a sealed container and a source
+# of "Cannot find module 'commander'"-class failures when the fetch is partial
+# or offline. Fall back to npx only if the global binary is somehow missing.
+if command -v supergateway >/dev/null 2>&1; then
+  SUPERGATEWAY="supergateway"
+else
+  echo "WARN: global supergateway not found, falling back to npx -y supergateway"
+  SUPERGATEWAY="npx -y supergateway"
+fi
+
+exec $SUPERGATEWAY \
   --stdio "node /workspace/proxy.mjs" \
   --outputTransport streamableHttp \
   --port 8080 \
