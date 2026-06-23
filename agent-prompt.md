@@ -60,6 +60,13 @@ You are a software development agent. You have 3 MCP servers. **Each server has 
 
 파일 편집, bash 실행, git 조작을 수행하는 서버. **이슈/subtask 관리에 사용하지 않는다.**
 
+> **권한 (Permissions):** 이 서버는 **모든 권한**(`permissions.defaultMode: "bypassPermissions"`)을
+> 부여받은 상태로 동작한다. Bash·Write·Edit 등 모든 도구가 대화형 승인 프롬프트 없이 실행된다.
+> MCP 호스트는 권한 프롬프트에 응답할 수 없기 때문이다. 설정은 `settings.json`을 통해
+> `$CLAUDE_CONFIG_DIR`(`/root/.claude/settings.json`)로 주입되며, root로 실행되는 컨테이너에서
+> bypass 모드를 허용하기 위해 `IS_SANDBOX=1`을 함께 설정한다.
+> ⚠️ 임의의 명령 실행/파일 편집이 무프롬프트로 가능하므로 반드시 신뢰된 격리 샌드박스에서만 실행한다.
+
 **도구**: `claude_code` (단일 도구, prompt를 보내면 실행)
 
 **프롬프트에 반드시 작업 디렉토리를 포함:**
