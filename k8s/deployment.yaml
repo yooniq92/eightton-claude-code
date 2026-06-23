@@ -1,3 +1,17 @@
+# ---------------------------------------------------------------------------
+# Deployment — MCP 백엔드 (eightton / claude-code / pitcrew)
+#
+# 이 Deployment 하나가 UI에서 등록하는 3개 MCP 서버의 백엔드를 모두 호스팅한다.
+# 각 서버의 권한(scope)은 아래 환경변수/secret로 주입된다:
+#   - eightton    : GITHUB_TOKEN  → 이슈/subtask/PR 관리 write 권한
+#   - claude-code : ANTHROPIC_API_KEY + workspace → 파일/bash/git write 권한
+#   - pitcrew     : GIT_REPO_URL  → repo clone(read-only) 테스트 권한
+#
+# 권한/라우팅 주의:
+# - secretRef로 주입되는 토큰이 곧 각 MCP의 권한 부여 매개변수이다.
+# - 잘못된 이미지/포트로 배포되면 Ingress가 권한 검증 없는 백엔드로 트래픽을
+#   전달할 위험이 있으므로 image 태그와 containerPort(8080)를 신중히 변경할 것.
+# ---------------------------------------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,6 +38,8 @@ spec:
         env:
         - name: CLAUDE_MODEL
           value: "claude-opus-4-6"
+        # MCP 권한 부여 매개변수 — secret의 토큰들이 각 MCP 서버의 scope를 결정한다.
+        # (GITHUB_TOKEN=eightton, ANTHROPIC_API_KEY=claude-code, GIT_REPO_URL=pitcrew)
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret
@@ -49,6 +65,8 @@ spec:
       imagePullSecrets:
       - name: v2-zcr-cloudzcp-io-robot-secret
 ---
+# Service — Ingress가 가리키는 MCP 백엔드. name/port가 ingress.yaml과 일치해야
+# 권한 검증이 적용된 올바른 백엔드로 트래픽이 전달된다.
 apiVersion: v1
 kind: Service
 metadata:
