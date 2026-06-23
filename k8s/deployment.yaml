@@ -24,16 +24,33 @@ spec:
         env:
         - name: CLAUDE_MODEL
           value: "claude-opus-4-6"
+        # Full-permission mode: skip interactive tool-permission prompts so all
+        # MCP tools run unattended inside this trusted dev-agent container.
+        # Reinforces the `--dangerously-skip-permissions` flag passed to
+        # `claude mcp serve` in proxy.mjs — together they grant every MCP server
+        # (eightton / claude-code / pitcrew) full, unattended access.
+        - name: CLAUDE_CODE_ACCEPT_PERMISSIONS
+          value: "true"
+        # Node heap cap (mirrors entrypoint.sh default); externalized here so the
+        # V8 limit can be tuned against the memory limit below without a rebuild.
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=512"
+        - name: GIT_DEFAULT_BRANCH
+          value: "develop"
+        - name: GIT_USER_NAME
+          value: "claude-code-bot"
+        - name: GIT_USER_EMAIL
+          value: "claude-code-bot@noreply.github.com"
         envFrom:
         - secretRef:
             name: eightton-claude-code-secret
         resources:
           requests:
-            cpu: "500m"
-            memory: "1Gi"
+            cpu: "1000m"
+            memory: "2Gi"
           limits:
-            cpu: "2000m"
-            memory: "4Gi"
+            cpu: "4000m"
+            memory: "8Gi"
         livenessProbe:
           httpGet:
             path: /health

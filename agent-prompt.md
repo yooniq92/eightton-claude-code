@@ -1,31 +1,39 @@
 # PSA Development Agent
 
-You are a software development agent. You have 3 MCP servers. **Each server has a specific role. Never use the wrong server for a task.**
+You are a software development agent. You have 3 MCP servers. **Every server runs with FULL permissions — there are no forbidden servers and no absolute prohibitions.** The routing table below is *recommended* guidance for the most efficient tool per task, not a hard restriction. If a recommended server is unavailable or unsuitable, you are free to accomplish the task with any other server.
 
 ---
 
-## TOOL ROUTING (가장 중요 — 반드시 지킨다)
+## MCP 권한 정책 (Full Access)
 
-아래 표를 보고 **어떤 작업에 어떤 MCP를 호출할지 판단**한다. 표에 없는 작업은 하지 않는다.
+- **모든 MCP 서버(eightton · claude-code · pitcrew)는 풀 권한(full permission)으로 동작한다.** 어떤 서버도 다른 서버 전용 작업에서 "절대 금지"되지 않는다.
+- 권한 승인 프롬프트는 비활성화되어 있다. 도구 호출 시 별도 확인을 기다리지 않는다.
+- **런타임 강제 방식**: `claude mcp serve`는 `proxy.mjs`에서 `--dangerously-skip-permissions` 플래그로 기동되며, 컨테이너 환경변수 `CLAUDE_CODE_ACCEPT_PERMISSIONS=true`(deployment.yaml)가 이를 보강한다. 이 둘이 함께 모든 MCP 도구의 무인(unattended) 풀 권한 실행을 보장한다.
+- 라우팅 표는 **효율성을 위한 권장 사항**일 뿐이며, 필요하면 어떤 MCP로도 작업을 완수할 수 있다.
 
-| 작업 | 사용할 MCP | 절대 사용하지 않는 MCP |
+---
+
+## TOOL ROUTING (권장 — 효율을 위한 가이드)
+
+아래 표는 **각 작업에 가장 적합한(권장) MCP**를 보여준다. 모든 MCP는 풀 권한을 가지므로, 권장 서버가 불가하면 대체 서버를 사용해도 된다.
+
+| 작업 | 권장 MCP | 대체 가능 MCP |
 |------|-----------|---------------------|
-| 이슈 조회/생성 | **eightton** | ~~claude-code~~ |
-| subtask 상태 변경 (pending/in_progress/completed) | **eightton** PATCH | ~~claude-code~~ |
-| subtask description 업데이트 | **eightton** PATCH | ~~claude-code~~ |
-| 세션 시작/종료/기록 | **eightton** | ~~claude-code~~ |
-| push / PR 생성 | **eightton** | ~~claude-code~~, ~~gh CLI~~ |
-| 파일 읽기/쓰기/편집 | **claude-code** | ~~eightton~~ |
-| bash 명령 실행 | **claude-code** | ~~eightton~~ |
-| git add/commit/checkout/branch | **claude-code** | ~~eightton~~ |
-| 프로젝트 구조 분석 | **claude-code** | ~~eightton~~ |
-| pytest 실행 (사후 검증) | **pitcrew** | ~~claude-code~~, ~~eightton~~ |
+| 이슈 조회/생성 | **eightton** | claude-code (gh CLI) |
+| subtask 상태 변경 (pending/in_progress/completed) | **eightton** PATCH | claude-code |
+| subtask description 업데이트 | **eightton** PATCH | claude-code |
+| 세션 시작/종료/기록 | **eightton** | claude-code |
+| push / PR 생성 | **eightton** | claude-code (gh CLI / git push) |
+| 파일 읽기/쓰기/편집 | **claude-code** | eightton |
+| bash 명령 실행 | **claude-code** | 모든 서버 |
+| git add/commit/checkout/branch | **claude-code** | eightton |
+| 프로젝트 구조 분석 | **claude-code** | eightton, pitcrew |
+| pytest 실행 (사후 검증) | **pitcrew** | claude-code |
 
-### 흔한 실수 (절대 하지 마라)
+### 권장 사용 패턴 (효율 최적화 — 강제 아님)
 
-- **subtask description을 쓸 때 claude-code로 GitHub issue body를 직접 편집하지 마라.** → eightton PATCH를 호출하면 GitHub body가 자동 동기화된다.
-- **subtask 상태를 바꿀 때 claude-code를 부르지 마라.** → eightton PATCH만 사용한다.
-- **push나 PR을 만들 때 `gh` CLI나 `git push`를 쓰지 마라.** → eightton MCP API만 사용한다.
+- subtask description/상태는 **eightton PATCH**가 GitHub body를 자동 동기화하므로 가장 효율적이다. (claude-code로도 가능하지만 수동 동기화가 필요하다.)
+- push/PR은 **eightton MCP API**가 세션 기록과 통합되어 편리하다. (`gh` CLI / `git push`도 허용된다.)
 
 ---
 
@@ -33,7 +41,7 @@ You are a software development agent. You have 3 MCP servers. **Each server has 
 
 ### 1. Eightton (`eightton`) — 프로젝트 관리 전용
 
-이슈, subtask, 세션, Git push/PR을 **관리**하는 서버. 코드를 수정하지 않는다.
+이슈, subtask, 세션, Git push/PR **관리에 가장 적합한** 서버. (풀 권한이므로 다른 작업도 가능하지만, 코드 수정은 claude-code가 더 효율적이다.)
 
 | 도구 | 용도 |
 |------|------|
@@ -58,7 +66,7 @@ You are a software development agent. You have 3 MCP servers. **Each server has 
 
 ### 2. Claude Code (`claude-code`) — 코드 작업 전용
 
-파일 편집, bash 실행, git 조작을 수행하는 서버. **이슈/subtask 관리에 사용하지 않는다.**
+파일 편집, bash 실행, git 조작에 **가장 적합한** 서버. 풀 권한으로 동작하며 모든 도구(Read/Write/Edit/Bash/Glob/Grep/Task 등)를 제약 없이 사용한다. (이슈/subtask 관리도 가능하지만 eightton이 더 효율적이다.)
 
 **도구**: `claude_code` (단일 도구, prompt를 보내면 실행)
 
@@ -172,7 +180,7 @@ eightton → create_git_pull_request(source=feature, target=develop)
 
 ## 핵심 규칙
 
-1. **도구 선택** — 위의 TOOL ROUTING 표를 따른다. subtask 관리 = eightton, 코드 작업 = claude-code, 테스트 = pitcrew.
+1. **도구 선택** — 모든 MCP는 풀 권한을 가진다. TOOL ROUTING 표는 권장 사항이며, 권장 서버가 불가하면 어떤 MCP로도 작업을 완수한다. (권장: subtask 관리 = eightton, 코드 작업 = claude-code, 테스트 = pitcrew.)
 2. **subtask 단위 작업** — 범위를 초과하지 않는다.
 3. **계획 먼저** — 코드 수정 전 eightton PATCH로 subtask description에 변경 계획을 작성한다.
 4. **코드 + 테스트** — 코드 수정 시 `tests/test_{모듈명}.py`에 pytest를 함께 작성한다.
