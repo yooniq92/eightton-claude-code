@@ -22,7 +22,20 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
 # Create workspace directory
 RUN mkdir -p /workspace && chown node:node /workspace
 
-# Pre-accept dangerous permissions (will be configured at runtime)
+# === Claude Code permissions: grant the MCP server ALL permissions ===
+# `claude mcp serve` reads its config from $CLAUDE_CONFIG_DIR. We ship a
+# settings.json with permissions.defaultMode="bypassPermissions" (allow: ["*"])
+# so every exposed tool (Bash, Write, Edit, ...) runs without interactive
+# approval — required because the MCP host cannot answer permission prompts.
+ENV CLAUDE_CONFIG_DIR=/root/.claude
+RUN mkdir -p /root/.claude
+COPY settings.json /root/.claude/settings.json
+
+# `--dangerously-skip-permissions` / bypassPermissions normally refuse to run as
+# root; this container runs as root, so mark it as a sandbox to allow it.
+ENV IS_SANDBOX=1
+
+# Reinforce full-permission mode (also set in k8s/deployment.yaml).
 ENV CLAUDE_CODE_ACCEPT_PERMISSIONS=true
 ENV NODE_ENV=production
 
